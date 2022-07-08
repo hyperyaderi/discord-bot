@@ -1,5 +1,7 @@
 import os
+import json
 import sqlite3
+import requests
 
 
 from discord import FFmpegPCMAudio, Embed, Color
@@ -60,7 +62,7 @@ async def changeprefix(ctx, prefix):
 
 @bot.command(aliases=['c', 'h', 'help'])
 async def commands(ctx):
-    emb = Embed(title='Команды', description=f'play - начать воспроизведение\nstop - завершить', colour=Color.green(), timestamp=ctx.message.created_at)
+    emb = Embed(title='Команды', description=f'play - начать воспроизведение\nstop - завершить\nchangeprefix - сменить префикс\nnowplaying - узнать какой трек сейчас играет\nlisteners - узнать кол-во слушателей', colour=Color.green(), timestamp=ctx.message.created_at)
     emb.set_footer(text=ctx.message.author)
     await ctx.send(embed=emb)
 
@@ -68,12 +70,9 @@ async def commands(ctx):
 async def play(ctx):
     channel = ctx.author.voice.channel
     global player
-    try:
-        player = await channel.connect()
-    except:
-        pass
+    player = await channel.connect()
     player.play(FFmpegPCMAudio('http://localhost:1337/radio'))
-
+    
 
 @bot.command(aliases=['s', 'sto'])
 async def stop(ctx):
@@ -84,6 +83,27 @@ async def stop(ctx):
         emb = Embed(timestamp=ctx.message.created_at, title='Ошибка!!!', colour=Color.red(), description='Плеер не был запущен')
         emb.set_footer(text=ctx.message.author)
         await ctx.send(embed=emb)
+
+@bot.command(aliases=['n', 'np', 'now'])
+async def nowplaying(ctx):
+    url = 'http://localhost:1337/status-json.xsl'
+    resp = requests.get(url).text
+    data = json.loads(resp)
+    nowplaying = data['icestats']['source']['title']
+    emb = Embed(timestamp=ctx.message.created_at, title='Сейчас играет', colour=Color.green(), description=nowplaying)
+    emb.set_footer(text=ctx.message.author)
+    await ctx.send(embed=emb)
+
+@bot.command(aliases=['l', 'ls', 'list'])
+async def listeners(ctx):
+    url = 'http://localhost:1337/status-json.xsl'
+    resp = requests.get(url).text
+    data = json.loads(resp)
+    listeners = data['icestats']['source']['listeners']
+    listener_peak = data['icestats']['source']['listener_peak']
+    emb = Embed(timestamp=ctx.message.created_at, title='Количество слушателей', colour=Color.green(), description=f'Сейчас: {listeners} чел.\nПик: {listener_peak} чел.')
+    emb.set_footer(text=ctx.message.author)
+    await ctx.send(embed=emb)
 
 @changeprefix.error
 async def prefix_error(ctx, exception):
