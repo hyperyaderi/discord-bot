@@ -34,7 +34,7 @@ def get_prefix(bot, message):
    conn.commit()
    return prefix
 
-bot = commands.Bot(command_prefix=get_prefix, help_command=None)
+bot = commands.Bot(command_prefix=get_prefix, help_command=None, case_insensitive=True)
 
 @bot.event
 async def on_ready():
