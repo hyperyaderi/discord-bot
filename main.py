@@ -13,7 +13,6 @@ conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
-PREFIX = os.getenv('DISCORD_PREFIX')
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS guilds(
     guild_id INT PRIMARY KEY,
